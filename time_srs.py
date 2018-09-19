@@ -35,18 +35,18 @@ import pandas as pd
 from numpy import loadtxt
 
 ## Set-up cases
-case = 'CS1' # string of case study in the format 'CS' + number, e.g. 'CS1'
+case_study = 'CS1' # string of case study in the format 'CS' + number, e.g. 'CS1'
 #res = 'km4p0' # string of resolution to match filename, e.g. 'km4p0'
 
 # Make sure Python is looking in the right place for files
-if case == 'CS1':
+if case_study == 'CS1':
     os.chdir('/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS1/') # path to data
     filepath = '/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS1/'
     case_start = '2016-05-08' # Must be in datetime format as a string, e.g. '2016-05-08'
     case_end = '2016-05-13' 
     #AWS_idx = (25404,25812) # Indices of corresponding times in AWS data (hacky workaround)
     res_list = [ 'km1p5', 'km4p0'] # List of model resolutions you want to process
-elif case == 'CS2':
+elif case_study == 'CS2':
     os.chdir('/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS2/')
     filepath = '/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS2/'
     case_start = '2016-05-22' # Must be in datetime format as a string, e.g. '2016-05-08'
@@ -55,26 +55,33 @@ elif case == 'CS2':
     res_list = ['km1p5', 'km4p0'] 
 
 def load_AWS():
-    print '\nimporting AWS observations...'
-    # Load AWS data and create variables
-    AWS_srs = np.genfromtxt ('/data/clivarm/wip/ellgil82/AWS/Cabinet_Inlet_AWS18.txt', names = True)
-    AWS_srs = pd.DataFrame(AWS_srs) # Convert to pandas DataFrame this way because it loads in incorrectly using pd.from_csv
-    print '\nsubsetting for Case Study 2...'
-    AWS_srs.index = compose_date(AWS_srs['Year'], days=AWS_srs['day'])
-    AWS_srs['Time'] = 24*(AWS_srs['Time'] - AWS_srs['day'])
-    # Create subset for Case Study 
-    case = AWS_srs.loc[case_start:case_end]
-    print '\nconverting times...'
-    # Convert times so that they can be plotted
-    Time_list = np.array(Time_list)
-    Time_list = np.delete(Time_list,[0])
-    E = AWS_srs['LWnet'] + AWS_srs['SWnet'] + AWS_srs['Hlat'] + AWS_srs['Hsen'] - AWS_srs['Gs']
-    var_dict = {
-    'Time_list': Time_list, 
-    'E': E,
-    'AWS_obs': AWS_srs
-    }
-    return var_dict
+	print '\nimporting AWS observations...'
+	# Load AWS data 
+	AWS_srs = np.genfromtxt ('/data/clivarm/wip/ellgil82/AWS/Cabinet_Inlet_AWS18.txt', names = True)
+	AWS_srs = pd.DataFrame(AWS_srs) # Convert to pandas DataFrame this way because it loads in incorrectly using pd.from_csv
+	# Calculate date, given list of years and day of year
+	date_list = compose_date(AWS_srs['Year'], days=AWS_srs['day'])
+	AWS_srs['Date'] = date_list
+	# Set date as index 
+	AWS_srs.index = AWS_srs['Date']
+	# Calculate actual time from decimal DOY (seriously, what even IS that format?)
+	AWS_srs['Time'] = 24*(AWS_srs['Time'] - AWS_srs['day'])
+	# Trim to case study
+	print '\nsubsetting for Case Study...'
+	case = AWS_srs.loc[case_start:case_end]
+	print '\nconverting times...'
+	# Convert times so that they can be plotted
+	time_list = []
+	for i in case['Time']:
+	    hrs = int(i)                 # will now be 1 (hour)
+	    mins = int((i-hrs)*60)       # will now be 4 minutes
+	    secs = int(0 - hrs*60*60 + mins*60) # will now be 30
+	    j = datetime.time(hour = hrs, minute=mins)
+	    time_list.append(j)
+	case['Time'] = time_list
+	case['datetime'] = case.apply(lambda r : pd.datetime.combine(r['Date'],r['Time']),1)
+	case['E'] = case['LWnet'] + case['SWnet'] + case['Hlat'] + case['Hsen'] - case['Gs']
+	return case
 
 AWS_var = load_AWS()
 
