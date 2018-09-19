@@ -3,6 +3,10 @@
 Author: Ella Gilbert, 2018.
 '''
 
+import numpy as np
+import iris 
+import pandas as pd
+
 ## Function to rotate iris cubes plotted on a rotated pole grid to regular lats/lons
 
 def rotate_data(var, lat_dim, lon_dim):
@@ -55,3 +59,4 @@ def compose_time(hours=None, minutes=None, seconds=None, milliseconds=None, micr
     vals = (hours, minutes, seconds, milliseconds, microseconds, nanoseconds)
     return sum(np.asarray(v, dtype=t) for t, v in zip(types, vals)
                if v is not None)
+

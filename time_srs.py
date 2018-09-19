@@ -32,7 +32,7 @@ import scipy
 import pandas as pd
 from tools import rotate_data, find_gridbox, compose_date, compose_time
 import pandas as pd
-from numpy import loadtxt
+import datetime
 
 ## Set-up cases
 case_study = 'CS1' # string of case study in the format 'CS' + number, e.g. 'CS1'
@@ -65,14 +65,14 @@ def load_AWS():
 	# Set date as index 
 	AWS_srs.index = AWS_srs['Date']
 	# Calculate actual time from decimal DOY (seriously, what even IS that format?)
-	AWS_srs['Time'] = 24*(AWS_srs['Time'] - AWS_srs['day'])
+	AWS_srs['time'] = 24*(AWS_srs['Time'] - AWS_srs['day'])
 	# Trim to case study
 	print '\nsubsetting for Case Study...'
 	case = AWS_srs.loc[case_start:case_end]
 	print '\nconverting times...'
 	# Convert times so that they can be plotted
 	time_list = []
-	for i in case['Time']:
+	for i in case['time']:
 	    hrs = int(i)                 # will now be 1 (hour)
 	    mins = int((i-hrs)*60)       # will now be 4 minutes
 	    secs = int(0 - hrs*60*60 + mins*60) # will now be 30
@@ -356,15 +356,11 @@ def sens_test(res):
 
 ## Set up plotting options
 rcParams['font.family'] = 'sans-serif'
-rcParams['font.sans-serif'] = ['Helvetica', 'Liberation sans', 'Tahoma', 'DejaVu Sans',
+rcParams['font.sans-serif'] = ['Segoe UI', 'Helvetica', 'Liberation sans', 'Tahoma', 'DejaVu Sans',
                                'Verdana']
 
-#Create empty pandas dataframe to put data in
 def correl_plot():
-    Time_list, melt_CS, SH_CS, LH_CS, LWd_CS, SWd_CS, LWn_CS, SWn_CS, Time_CS, RH_CS, Ts_CS, Tair_CS, wind_CS = load_AWS()
-    SH, LH, T_surf, Time_srs, melt, SW_n, LW_n, LW_d, SW_d, percentiles_SEB, melt_forced, E = load_SEB('km1p5')
-    sp_srs, T_surf, T_air, RH, Time_srs, percentiles_surf = load_surf('km1p5')
-    R_net = SW_n + LW_n
+    R_net = SEB1p5['SW_n'] + SEB1p5['LW_n']
     Rnet_CS = SWn_CS + LWn_CS
     fig, ax = plt.subplots(4,2, figsize = (16,28))
     ax2 = ax[:,1]
