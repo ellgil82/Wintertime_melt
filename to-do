@@ -3,7 +3,6 @@ To-do:
 Time_srs.py:
 - make times match automatically with times of model
 - sort out the time change ffs
-- make headers on AWS data file load in automatically
 - re-write to return dictionary of vars, like in cloud scripts
 - load in each res first, rather than doing it each time to speed up script
 - Make masking more reader-friendly
