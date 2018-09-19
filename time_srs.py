@@ -30,7 +30,7 @@ from matplotlib import rcParams
 import numpy.ma as ma
 import scipy
 import pandas as pd
-from tools import rotate_data, find_gridbox
+from tools import rotate_data, find_gridbox, compose_date, compose_time
 import pandas as pd
 from numpy import loadtxt
 
@@ -42,38 +42,36 @@ case = 'CS1' # string of case study in the format 'CS' + number, e.g. 'CS1'
 if case == 'CS1':
     os.chdir('/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS1/') # path to data
     filepath = '/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS1/'
-    AWS_idx = (25404,25812) # Indices of corresponding times in AWS data (hacky workaround)
+    case_start = '2016-05-08' # Must be in datetime format as a string, e.g. '2016-05-08'
+    case_end = '2016-05-13' 
+    #AWS_idx = (25404,25812) # Indices of corresponding times in AWS data (hacky workaround)
     res_list = [ 'km1p5', 'km4p0'] # List of model resolutions you want to process
 elif case == 'CS2':
     os.chdir('/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS2/')
     filepath = '/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS2/'
-    AWS_idx = (26124,26508)
+    case_start = '2016-05-22' # Must be in datetime format as a string, e.g. '2016-05-08'
+    case_end = '2016-05-30' 
+    #AWS_idx = (26124,26508)
     res_list = ['km1p5', 'km4p0'] 
 
 def load_AWS():
     print '\nimporting AWS observations...'
     # Load AWS data and create variables
     AWS_srs = np.genfromtxt ('/data/clivarm/wip/ellgil82/AWS/Cabinet_Inlet_AWS18.txt', names = True)
+    AWS_srs = pd.DataFrame(AWS_srs) # Convert to pandas DataFrame this way because it loads in incorrectly using pd.from_csv
     print '\nsubsetting for Case Study 2...'
-    # Create subset for Case Study 2
-    CS = AWS_srs[AWS_idx[0]:AWS_idx[1],:]
-    AWS_time = loadtxt(fAWS, usecols=(0, 1, 2), skiprows=1)
-    CS_time = AWS_time[AWS_idx[0]:AWS_idx[1],:]
-    ## !! Make this work so the headers read in automatically
+    AWS_srs.index = compose_date(AWS_srs['Year'], days=AWS_srs['day'])
+    AWS_srs['Time'] = 24*(AWS_srs['Time'] - AWS_srs['day'])
+    # Create subset for Case Study 
+    case = AWS_srs.loc[case_start:case_end]
     print '\nconverting times...'
     # Convert times so that they can be plotted
-    Time_list = np.empty(1,)
-    from datetime import datetime, timedelta
-    for each_day in Time_CS:
-        epoch = datetime(datetime.now().year-3, 12, 31)
-        result = epoch + timedelta(days=each_day)
-        Time_list = np.append(Time_list, result)
     Time_list = np.array(Time_list)
     Time_list = np.delete(Time_list,[0])
     E = AWS_srs['LWnet'] + AWS_srs['SWnet'] + AWS_srs['Hlat'] + AWS_srs['Hsen'] - AWS_srs['Gs']
     var_dict = {
     'Time_list': Time_list, 
-    'E': E
+    'E': E,
     'AWS_obs': AWS_srs
     }
     return var_dict

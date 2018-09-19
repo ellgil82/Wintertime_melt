@@ -35,6 +35,7 @@ def find_gridbox(x, y, real_lat, real_lon):
     return lon_index, lat_index
 
 ## Functions to convert AWS time and dates (in decimal days and years) into datetime objects for plotting
+## Adapted from https://stackoverflow.com/questions/34258892/converting-year-and-day-of-year-into-datetime-index-in-pandas
 
 def compose_date(years, months=1, days=1, weeks=None, hours=None, minutes=None,
                  seconds=None, milliseconds=None, microseconds=None, nanoseconds=None):
