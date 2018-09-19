@@ -177,7 +177,7 @@ def load_SEB(res):
     # Create masked array when Ts<0
     melt_masked = np.ma.masked_where(T_surf<-0.025, E)
     melt = melt_masked.clip(min=0)
-    melt_forced = np.ma.masked_where(AWS_var['Ts']<-0.025, E)
+    melt_forced = np.ma.masked_where(AWS_var['Tsurf']<-0.025, E)
     var_dict = {
     'Time_srs': Time_srs, 
     'Ts': T_surf, 
