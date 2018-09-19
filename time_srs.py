@@ -13,14 +13,8 @@ Dependencies:
 
 Author: Ella Gilbert, 2017. Updated April 2018.
 
-
-To-do:
-- make times match automatically with times of model
-- make headers on AWS data file load in automatically
-- re-write to return dictionary of vars, like in cloud scripts
-- load in each res first, rather than doing it each time to speed up script
-
 """
+
 # Import modules
 import iris
 import numpy as np
@@ -37,6 +31,8 @@ import numpy.ma as ma
 import scipy
 import pandas as pd
 from tools import rotate_data, find_gridbox
+import pandas as pd
+from numpy import loadtxt
 
 ## Set-up cases
 case = 'CS1' # string of case study in the format 'CS' + number, e.g. 'CS1'
@@ -56,33 +52,14 @@ elif case == 'CS2':
 
 def load_AWS():
     print '\nimporting AWS observations...'
-    import numpy as np
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    from numpy import loadtxt
-    #Load AWS data and create variables
-    fAWS = '/data/clivarm/wip/ellgil82/May_2016/CS2/data/AWS_data.txt'
-    AWS_srs = loadtxt (fAWS, skiprows=1)
+    # Load AWS data and create variables
+    AWS_srs = np.genfromtxt ('/data/clivarm/wip/ellgil82/AWS/Cabinet_Inlet_AWS18.txt', names = True)
     print '\nsubsetting for Case Study 2...'
     # Create subset for Case Study 2
     CS = AWS_srs[AWS_idx[0]:AWS_idx[1],:]
     AWS_time = loadtxt(fAWS, usecols=(0, 1, 2), skiprows=1)
     CS_time = AWS_time[AWS_idx[0]:AWS_idx[1],:]
     ## !! Make this work so the headers read in automatically
-    RH_CS = CS[:,5]
-    Tair_CS = CS[:,4]
-    Ts_CS = CS[:,-1]
-    wind_CS = CS[:,8]
-    Time_CS = CS[:,3]
-    SWn_CS = CS[:,11]
-    LWn_CS = CS[:,14]
-    LWd_CS = CS[:,12]
-    LWu_CS = CS[:,13]
-    SWd_CS = CS[:,9]
-    LH_CS = CS[:,-4]
-    SH_CS = CS[:,-5]
-    G_CS = CS[:,-3]
-    melt_CS = CS[:,-2]
     print '\nconverting times...'
     # Convert times so that they can be plotted
     Time_list = np.empty(1,)
@@ -93,20 +70,11 @@ def load_AWS():
         Time_list = np.append(Time_list, result)
     Time_list = np.array(Time_list)
     Time_list = np.delete(Time_list,[0])
+    E = AWS_srs['LWnet'] + AWS_srs['SWnet'] + AWS_srs['Hlat'] + AWS_srs['Hsen'] - AWS_srs['Gs']
     var_dict = {
     'Time_list': Time_list, 
-    'melt': melt_CS, 
-    'SH': SH_CS, 
-    'LH': LH_CS, 
-    'LWd': LWd_CS, 
-    'SWd': SWd_CS, 
-    'LWnet': LWn_CS, 
-    'SWnet': SWn_CS, 
-    'Time': Time_CS, 
-    'RH': RH_CS, 
-    'Ts': Ts_CS, 
-    'T_air': Tair_CS, 
-    'wind_sp': wind_CS
+    'E': E
+    'AWS_obs': AWS_srs
     }
     return var_dict
 
@@ -308,8 +276,7 @@ surf_1p5 = load_surf('km1p5')
 # SEB_4p0 = load_SEB('km4p0')
 # surf_4p0 = load_surf('km4p0')
 
-#Time_list, melt_CS, SH_CS, LH_CS, LWd_CS, SWd_CS, LWn_CS, SWn_CS, Time_CS, RH_CS, Ts_CS, Tair_CS, wind_CS = load_AWS()
-#total_SEB_obs = SH_CS + LH_CS + SWn_CS + LWn_CS
+total_SEB_obs = SH_CS + LH_CS + SWn_CS + LWn_CS
 
 ## =========================================== SENSITIVITY TESTING ================================================== ##
 
