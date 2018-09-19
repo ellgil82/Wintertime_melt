@@ -40,15 +40,15 @@ case_study = 'CS1' # string of case study in the format 'CS' + number, e.g. 'CS1
 
 # Make sure Python is looking in the right place for files
 if case_study == 'CS1':
-    os.chdir('/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS1/') # path to data
-    filepath = '/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS1/'
+    os.chdir('/data/clivarm/wip/ellgil82/May_2016/Re-runs/') # path to data
+    filepath = '/data/clivarm/wip/ellgil82/May_2016/Re-runs/'
     case_start = '2016-05-08' # Must be in datetime format as a string, e.g. '2016-05-08'
     case_end = '2016-05-13' 
     #AWS_idx = (25404,25812) # Indices of corresponding times in AWS data (hacky workaround)
     res_list = [ 'km1p5', 'km4p0'] # List of model resolutions you want to process
 elif case_study == 'CS2':
-    os.chdir('/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS2/')
-    filepath = '/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS2/'
+    os.chdir('/data/clivarm/wip/ellgil82/May_2016/Re-runs/')
+    filepath = '/data/clivarm/wip/ellgil82/May_2016/Re-runs/'
     case_start = '2016-05-22' # Must be in datetime format as a string, e.g. '2016-05-08'
     case_end = '2016-05-30' 
     #AWS_idx = (26124,26508)
@@ -89,8 +89,8 @@ AWS_var = load_AWS()
 ## This can be adapted to use other formats, e.g. NetCDF, GRIB etc. (see Iris docs for further information: https://scitools.org.uk/iris/docs/latest/#)
 
 def load_SEB(res):
-    surf = []
     SEB = []
+    surf = []
     for file in os.listdir(filepath):
         if fnmatch.fnmatch(file, '*%(res)s_*_pa012.pp' % locals()):
             surf.append(file)
@@ -281,8 +281,6 @@ surf_1p5 = load_surf('km1p5')
 # SEB_4p0 = load_SEB('km4p0')
 # surf_4p0 = load_surf('km4p0')
 
-total_SEB_obs = SH_CS + LH_CS + SWn_CS + LWn_CS
-
 ## =========================================== SENSITIVITY TESTING ================================================== ##
 
 ## Does the temperature bias improve if we choose a more representative grid point?
@@ -361,7 +359,6 @@ rcParams['font.sans-serif'] = ['Segoe UI', 'Helvetica', 'Liberation sans', 'Taho
 
 def correl_plot():
     R_net = SEB1p5['SW_n'] + SEB1p5['LW_n']
-    Rnet_CS = SWn_CS + LWn_CS
     fig, ax = plt.subplots(4,2, figsize = (16,28))
     ax2 = ax[:,1]
     ax = ax.flatten()
@@ -385,8 +382,8 @@ def correl_plot():
         [l.set_visible(False) for (w, l) in enumerate(axs.yaxis.get_ticklabels()) if w % 2 != 0]
         axs.yaxis.set_label_coords(1.45, 0.57)
     plot = 0
-    surf_met_mod = [T_surf, T_air, RH, sp_srs, SW_d, LW_d, R_net, melt ]
-    surf_met_obs = [Ts_CS, Tair_CS, RH_CS, wind_CS, SWd_CS, LWd_CS, Rnet_CS, melt_CS]
+    surf_met_mod = [SEB1p5['Ts'], SEB1p5['T_air'], SEB1p5['RH'], SEB1p5['sp_srs'], SEB1p5['SW_d'], SEB1p5['LW_d'], R_net, SEB1p5['melt'] ]
+    surf_met_obs = [AWS_var['Tsurf'], AWS_var['Tair_2m'], AWS_var['RH'], AWS_var['FF_10m'], AWS_var['SWd'], AWS_var['LWd'], AWS_var['Rnet'], AWS_var['Melt']]
     titles = ['$T_S$', '$T_{air}$', '\nRelative \nHumidity', '\nWind speed', '$SW_\downarrow$',  '$LW_\downarrow$', '$R_{net}$', 'melt']
     from itertools import chain
     for i in range(len(surf_met_mod)):
