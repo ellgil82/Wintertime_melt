@@ -426,16 +426,10 @@ def correl_plot():
 #bias_srs()
 
 def calc_bias(res):
-    Time_list, melt_CS, SH_CS, LH_CS, LWd_CS, SWd_CS, LWn_CS, SWn_CS, Time_CS, RH_CS, Ts_CS, Tair_CS, wind_CS, = load_AWS()
-    sp_srs, T_surf, T_air, RH, Time_srs, percentiles_surf = load_surf(res)
-    SH, LH, T_surf, Time_srs, melt, SW_n, LW_n, LW_d, SW_d, percentiles_SEB, melt_forced, E = load_SEB(res)
-    R_net = SW_n + LW_n
-    Rnet_CS = SWn_CS + LWn_CS
-    total_SEB_obs_CS = SH_CS + LH_CS + SWn_CS + LWn_CS
     # Calculate bias of time series
     # Forecast error
-    surf_obs = [RH_CS, wind_CS, Tair_CS, Ts_CS, melt_CS, SH_CS, LH_CS, LWn_CS, SWn_CS, SWd_CS, LWd_CS, total_SEB_obs_CS, melt_CS]
-    surf_mod = [RH, sp_srs, T_air, T_surf, melt, SH, LH, LW_n, SW_n, SW_d, LW_d, E, melt_forced]
+    surf_met_obs = [AWS_var['Tsurf'], AWS_var['Tair_2m'], AWS_var['RH'], AWS_var['FF_10m'], AWS_var['SWd'], AWS_var['LWd'], AWS_var['E'], AWS_var['Melt'], AWS_var['Melt']]    
+    surf_mod = [surf_1p5['Ts'], surf1p5['T_air'], surf1p5['RH'], surf1p5['sp_srs'], surf1p5['SW_d'], surf1p5['LW_d'], surf1p5['E'], surf1p5['melt'], surf1p5['melt_forced']]
     mean_obs = []
     mean_mod = []
     bias = []
@@ -449,7 +443,7 @@ def calc_bias(res):
     mean_error = np.mean(errors, axis=1)
     mean_sq_error = np.mean(np.power(errors, 2), axis=1)
     rmse = np.sqrt(mean_sq_error)
-    idx = ['RH', 'wind', 'Tair', 'Ts', 'melt','SH', 'LH', 'LWn', 'SWn', 'SWd', 'LWd', 'total', 'melt forced']
+    idx = ['Ts', 'Tair', 'RH', 'wind', 'melt', 'SWd', 'LWd', 'total', 'melt', 'melt forced']
     df = pd.DataFrame(index = idx)
     df['obs mean'] = pd.Series(mean_obs, index = idx)
     df['mod mean'] = pd.Series(mean_mod, index = idx)
@@ -469,7 +463,7 @@ def calc_bias(res):
 
 ## Set up plotting options
 rcParams['font.family'] = 'sans-serif'
-rcParams['font.sans-serif'] = ['Helvetica', 'Liberation sans', 'Tahoma', 'DejaVu Sans',
+rcParams['font.sans-serif'] = ['Segoe UI', 'Helvetica', 'Liberation sans', 'Tahoma', 'DejaVu Sans',
                                'Verdana']
 #SH_srs, LH_srs,  T_surf, Time_srs, melt, SW_n, LW_n, LW_d, SW_d, percentiles_SEB = load_SEB('km1p5')
 #sp_srs, T_surf, T_air, RH, Time_srs, percentiles_surf = load_surf('km1p5')
@@ -477,8 +471,7 @@ rcParams['font.sans-serif'] = ['Helvetica', 'Liberation sans', 'Tahoma', 'DejaVu
 def SEB_plot():
     fig, ax = plt.subplots(2,2,sharex= True, sharey = True, figsize=(18, 12))
     ax = ax.flatten()
-    Time_list, melt_CS, SH_CS, LH_CS,  LWd_CS, SWd_CS, LW_CS, SW_CS, Time_CS, RH_CS, Ts_CS, Tair_CS, wind_CS, = load_AWS()
-    col_dict = {'km0p5': '#33a02c', 'km1p5': '#f68080', 'km4p0': '#1f78b4'}
+    col_dict = {'0.5 km': '#33a02c', '1.5 km': '#f68080', '4.0 km': '#1f78b4'}
     days = mdates.DayLocator(interval=1)
     dayfmt = mdates.DateFormatter('%d %b')
     for axs in ax:
@@ -488,74 +481,72 @@ def SEB_plot():
         axs.tick_params(axis='both', which='both', labelsize=24, tick1On=False, tick2On=False, labelcolor='dimgrey', pad=10)
         [l.set_visible(False) for (w, l) in enumerate(axs.yaxis.get_ticklabels()) if w % 2 != 0]
         [l.set_visible(False) for (w, l) in enumerate(axs.xaxis.get_ticklabels()) if w % 2 != 0]
-        # Plot each res in turn
-    res_list = ['km4p0', 'km1p5' ]
-    for r in res_list:
-        SH_srs, LH_srs, T_surf, Time_srs, melt, SW_n, LW_n, LW_d, SW_d, percentiles_SEB, melt_forced, E = load_SEB(r)
+        # Plot just 1.5 km 
+    for r in ['1.5 km']: # 
        # Shortwave
         ax2 = ax[0].twiny()
-        obs = ax[0].plot(Time_list, SWd_CS, color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder = 3)
+        obs = ax[0].plot(AWS_var['datetime'], AWS_var['SW_d'], color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder = 3)
         ax[0].spines['right'].set_visible(False)
-        ax2.plot(Time_srs, SW_d, linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
+        ax2.plot(surf1p5['Time_srs'], surf1p5['SW_d'], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
         ax2.axis('off')
-        ax2.set_xlim(Time_srs[1], Time_srs[-1])
+        ax2.set_xlim(surf1p5['Time_srs'][1], surf1p5['Time_srs'][-1])
         ax2.tick_params(axis='both', tick1On = False, tick2On = False)
         ax2.set_ylim([-200,400])
         ax[0].set_ylim([-200, 400])
         ax[0].set_ylabel('Downwelling \nShortwave \nRadiation \n(W m$^{-2}$)', rotation=0, fontsize=24, color = 'dimgrey')
         ax[0].yaxis.set_label_coords(-0.4, 0.5)
         ax[0].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False)
-        ax[0].text(x=Time_srs[25], y=330, fontweight='bold', s='a', fontsize=30, color='dimgrey', zorder=5)
+        ax[0].text(x=surf1p5['Time_srs'][25], y=330, fontweight='bold', s='a', fontsize=30, color='dimgrey', zorder=5)
         # Longwave
         ax2 = ax[1].twiny()
-        obs = ax[1].plot(Time_list, LWd_CS, color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder =3)
+        obs = ax[1].plot(AWS_var['datetime'], AWS_var['LWd'], color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder =3)
         ax[1].spines['left'].set_visible(False)
-        ax2.plot(Time_srs, LW_d, linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
+        ax2.plot(surf1p5['Time_srs'], surf1p5['LW_d'], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
         ax[1].set_ylabel('Downwelling \nLongwave \nRadiation \n(W m$^{-2}$)',  rotation=0, fontsize = 24,  color = 'dimgrey')
         ax[1].yaxis.set_label_coords(1.3, 0.5)
         ax[1].spines['right'].set_visible(False)
-        ax2.set_xlim(Time_srs[1], Time_srs[-1])
+        ax2.set_xlim(surf1p5['Time_srs'][1], surf1p5['Time_srs'][-1])
         ax[1].tick_params(axis='x', tick1On=False, tick2On=False)
         ax2.axis('off')
         ax2.tick_params(axis='both', tick1On=False, tick2On=False)
         ax2.tick_params(axis='x', tick1On=False, tick2On=False)
         ax[1].set_ylim(-200, 400)
         ax2.set_ylim(-200, 400)
-        ax[1].text(x=Time_srs[25], y=330, fontweight='bold', s='b', fontsize=30, color='dimgrey', zorder=5)
+        ax[1].text(x=surf1p5['Time_srs'][25], y=330, fontweight='bold', s='b', fontsize=30, color='dimgrey', zorder=5)
         # Sensible Heat
         ax2 = ax[2].twiny()
         ax[2].spines['right'].set_visible(False)
-        obs = ax[2].plot(Time_list, SH_CS, color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder= 3)
-        ax2.plot(Time_srs, SH_srs, linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
+        obs = ax[2].plot(AWS_var['datetime'], AWS_var['SH'], color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder= 3)
+        ax2.plot(surf1p5['Time_srs'], surf1p5['SH'], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
         ax[2].set_ylabel('Sensible \nHeat Flux \n(W m$^{-2}$)',  rotation=0, fontsize = 24,  color = 'dimgrey')
         ax[2].yaxis.set_label_coords(-0.4, 0.5)
         ax[2].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False )
         ax2.axis('off')
-        ax2.set_xlim(Time_srs[1], Time_srs[-1])
+        ax2.set_xlim(surf1p5['Time_srs'][1], surf1p5['Time_srs'][-1])
         ax2.tick_params(axis='both', tick1On=False, tick2On=False)
         ax[2].set_ylim(-200, 400)
         ax2.set_ylim(-200, 400)
-        ax[2].text(x=Time_srs[25], y=330, fontweight='bold', s='c', fontsize=30, color='dimgrey', zorder=5)
+        ax[2].text(x=surf1p5['Time_srs'][25], y=330, fontweight='bold', s='c', fontsize=30, color='dimgrey', zorder=5)
         # Latent Heat
         ax2 = ax[3].twiny()
-        obs = ax[3].plot(Time_list, LH_CS, color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder = 3)
-        ax2.plot(Time_srs, LH_srs, linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
+        obs = ax[3].plot(AWS_var['datetime'], AWS_var['LH'], color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder = 3)
+        ax2.plot(surf1p5['Time_srs'], AWS_var['LH'], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
         ax[3].set_ylabel('Latent \nHeat Flux \n(W m$^{-2}$)',  rotation=0, fontsize = 24,  color = 'dimgrey')
         ax[3].spines['left'].set_visible(False)
         ax[3].spines['right'].set_visible(False)
         ax[3].yaxis.set_label_coords(1.3, 0.5)
         ax[3].tick_params(axis='x', which='both', labelsize=24 )
         ax2.axis('off')
-        ax2.set_xlim(Time_srs[1], Time_srs[-1])
+        ax2.set_xlim(surf1p5['Time_srs'][1], surf1p5['Time_srs'][-1])
         ax[3].tick_params(axis='both', tick1On=False, tick2On=False)
         ax2.tick_params(axis='both', tick1On=False, tick2On=False)
         ax[3].set_ylim(-200, 400)
         ax2.set_ylim(-200, 400)
-        ax[3].text(x=Time_srs[25], y=330, fontweight='bold', s='d', fontsize=30, color='dimgrey', zorder=5)
-        ax[3].fill_between(Time_srs, percentiles_SEB[2], percentiles_SEB[3], facecolor=col_dict[r], alpha=0.4, zorder=2)
-        ax[2].fill_between(Time_srs, percentiles_SEB[0], percentiles_SEB[1], facecolor=col_dict[r], alpha=0.4, zorder=2)
-        ax[1].fill_between(Time_srs, percentiles_SEB[8], percentiles_SEB[9], facecolor=col_dict[r], alpha=0.4, zorder=2)
-        ax[0].fill_between(Time_srs, percentiles_SEB[4], percentiles_SEB[5], facecolor=col_dict[r], alpha=0.4, zorder=2)
+        ax[3].text(x=surf1p5['Time_srs'][25], y=330, fontweight='bold', s='d', fontsize=30, color='dimgrey', zorder=5)
+        ax[3].fill_between(surf1p5['Time_srs'], percentiles_SEB[2], percentiles_SEB[3], facecolor=col_dict[r], alpha=0.4, zorder=2)
+        ax[2].fill_between(surf1p5['Time_srs'], percentiles_SEB[0], percentiles_SEB[1], facecolor=col_dict[r], alpha=0.4, zorder=2)
+        ax[1].fill_between(surf1p5['Time_srs'], percentiles_SEB[8], percentiles_SEB[9], facecolor=col_dict[r], alpha=0.4, zorder=2)
+        ax[0].fill_between(surf1p5['Time_srs'], percentiles_SEB[4], percentiles_SEB[5], facecolor=col_dict[r], alpha=0.4, zorder=2)
     ax[2].xaxis.set_major_formatter(dayfmt)
     ax[3].xaxis.set_major_formatter(dayfmt)
     #Legend
