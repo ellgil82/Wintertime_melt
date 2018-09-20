@@ -47,41 +47,41 @@ if case_study == 'CS1':
     #AWS_idx = (25404,25812) # Indices of corresponding times in AWS data (hacky workaround)
     res_list = [ 'km1p5', 'km4p0'] # List of model resolutions you want to process
 elif case_study == 'CS2':
-    os.chdir('/data/clivarm/wip/ellgil82/May_2016/Re-runs/')
-    filepath = '/data/clivarm/wip/ellgil82/May_2016/Re-runs/'
+    os.chdir('/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS2/')
+    filepath = '/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS2/'
     case_start = '2016-05-22' # Must be in datetime format as a string, e.g. '2016-05-08'
     case_end = '2016-05-30' 
     #AWS_idx = (26124,26508)
     res_list = ['km1p5', 'km4p0'] 
 
 def load_AWS():
-	print '\nimporting AWS observations...'
-	# Load AWS data 
-	AWS_srs = np.genfromtxt ('/data/clivarm/wip/ellgil82/AWS/Cabinet_Inlet_AWS18.txt', names = True)
-	AWS_srs = pd.DataFrame(AWS_srs) # Convert to pandas DataFrame this way because it loads in incorrectly using pd.from_csv
-	# Calculate date, given list of years and day of year
-	date_list = compose_date(AWS_srs['Year'], days=AWS_srs['day'])
-	AWS_srs['Date'] = date_list
-	# Set date as index 
-	AWS_srs.index = AWS_srs['Date']
-	# Calculate actual time from decimal DOY (seriously, what even IS that format?)
-	AWS_srs['time'] = 24*(AWS_srs['Time'] - AWS_srs['day'])
-	# Trim to case study
-	print '\nsubsetting for Case Study...'
-	case = AWS_srs.loc[case_start:case_end]
-	print '\nconverting times...'
-	# Convert times so that they can be plotted
-	time_list = []
-	for i in case['time']:
-	    hrs = int(i)                 # will now be 1 (hour)
-	    mins = int((i-hrs)*60)       # will now be 4 minutes
-	    secs = int(0 - hrs*60*60 + mins*60) # will now be 30
-	    j = datetime.time(hour = hrs, minute=mins)
-	    time_list.append(j)
-	case['Time'] = time_list
-	case['datetime'] = case.apply(lambda r : pd.datetime.combine(r['Date'],r['Time']),1)
-	case['E'] = case['LWnet'] + case['SWnet'] + case['Hlat'] + case['Hsen'] - case['Gs']
-	return case
+    print '\nimporting AWS observations...'
+    # Load AWS data 
+    AWS_srs = np.genfromtxt ('/data/clivarm/wip/ellgil82/AWS/Cabinet_Inlet_AWS18.txt', names = True)
+    AWS_srs = pd.DataFrame(AWS_srs) # Convert to pandas DataFrame this way because it loads in incorrectly using pd.from_csv
+    # Calculate date, given list of years and day of year
+    date_list = compose_date(AWS_srs['Year'], days=AWS_srs['day'])
+    AWS_srs['Date'] = date_list
+    # Set date as index 
+    AWS_srs.index = AWS_srs['Date']
+    # Calculate actual time from decimal DOY (seriously, what even IS that format?)
+    AWS_srs['time'] = 24*(AWS_srs['Time'] - AWS_srs['day'])
+    # Trim to case study
+    print '\nsubsetting for Case Study...'
+    case = AWS_srs.loc[case_start:case_end]
+    print '\nconverting times...'
+    # Convert times so that they can be plotted
+    time_list = []
+    for i in case['time']:
+        hrs = int(i)                 # will now be 1 (hour)
+        mins = int((i-hrs)*60)       # will now be 4 minutes
+        secs = int(0 - hrs*60*60 + mins*60) # will now be 30
+        j = datetime.time(hour = hrs, minute=mins)
+        time_list.append(j)
+    case['Time'] = time_list
+    case['datetime'] = case.apply(lambda r : pd.datetime.combine(r['Date'],r['Time']),1)
+    case['E'] = case['LWnet'] + case['SWnet'] + case['Hlat'] + case['Hsen'] - case['Gs']
+    return case
 
 AWS_var = load_AWS()
 
@@ -276,7 +276,7 @@ def load_surf(res):
     'percentiles': percentiles}
     return var_dict 
 
-SEB_1p5 = load_SEB('km1p5')
+#SEB_1p5 = load_SEB('km1p5')
 surf_1p5 = load_surf('km1p5')
 # SEB_4p0 = load_SEB('km4p0')
 # surf_4p0 = load_surf('km4p0')
@@ -383,7 +383,7 @@ def correl_plot():
         axs.yaxis.set_label_coords(1.45, 0.57)
     plot = 0
     surf_met_mod = [SEB1p5['Ts'], SEB1p5['T_air'], SEB1p5['RH'], SEB1p5['sp_srs'], SEB1p5['SW_d'], SEB1p5['LW_d'], R_net, SEB1p5['melt'] ]
-    surf_met_obs = [AWS_var['Tsurf'], AWS_var['Tair_2m'], AWS_var['RH'], AWS_var['FF_10m'], AWS_var['SWd'], AWS_var['LWd'], AWS_var['Rnet'], AWS_var['Melt']]
+    surf_met_obs = [AWS_var['Tsurf'], AWS_var['Tair_2m'], AWS_var['RH_2m'], AWS_var['FF_10m'], AWS_var['SWd'], AWS_var['LWd'], AWS_var['Rnet'], AWS_var['Melt']]
     titles = ['$T_S$', '$T_{air}$', '\nRelative \nHumidity', '\nWind speed', '$SW_\downarrow$',  '$LW_\downarrow$', '$R_{net}$', 'melt']
     from itertools import chain
     for i in range(len(surf_met_mod)):
@@ -571,8 +571,10 @@ def surf_plot():
     fig, ax = plt.subplots(2,2,sharex= True, figsize=(22, 12))
     ax = ax.flatten()
     col_dict = {'0.5 km': '#33a02c', '1.5 km': '#f68080', '4.0 km': '#1f78b4'}
+    lab_dict = {0: 'a', 1: 'b', 2: 'c', 3: 'd', 4: 'e', 5: 'f', 6: 'g', 7: 'h', 8: 'i', 9: 'j', 10: 'k', 11: 'l' }
     days = mdates.DayLocator(interval=1)
     dayfmt = mdates.DateFormatter('%d %b')
+    plot = 0
     for axs in ax:
         axs.spines['top'].set_visible(False)
         plt.setp(axs.spines.values(), linewidth=2, color='dimgrey', )
@@ -580,25 +582,60 @@ def surf_plot():
         axs.tick_params(axis='both', which='both', labelsize=24, tick1On=False, tick2On=False, labelcolor='dimgrey', pad=10)
         [l.set_visible(False) for (w, l) in enumerate(axs.yaxis.get_ticklabels()) if w % 2 != 0]
         [l.set_visible(False) for (w, l) in enumerate(axs.xaxis.get_ticklabels()) if w % 2 != 0]
-    # Plot each res in turn
-    res_list = [ '1.5 km']
-    for r in res_list:
-       # RH first
-        obs = ax[0].plot(AWS_var['datetime'], AWS_var['RH'], color='k', linewidth=2.5, label="Cabinet Inlet AWS")
-        ax2 = ax[0].twiny()
-        ax[0].spines['right'].set_visible(False)
-        RH[RH > 100] = 100
-        ax2.plot(surf_1p5['Time_srs'], surf_1p5['RH'], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals())
-        ax2.axis('off')
-        ax2.set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
-        ax[0].set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
-        ax2.tick_params(axis='both', tick1On = False, tick2On = False)
-        ax2.set_ylim([0,100])
-        ax2.yaxis.set_label_coords(-0.35, 0.5)
-        ax[0].set_ylim([0, 100])
-        ax[0].set_ylabel('Relative \nHumidity \n(%)', rotation=0, fontsize=24, color = 'dimgrey', labelpad = 80)
-        ax[0].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False)
-        ax[0].text(x=surf_1p5['Time_srs'][15], y= 90, fontweight='bold', s = 'a', fontsize = 30, color = 'dimgrey', zorder = 5)
+    # Plot each variable in turn for 1.5 km resolution
+    for r in ['1.5 km']: # can increase the number of res
+        for j, k in zip(['RH_2m', 'FF_10m', 'Tair_2m', 'Tsurf'], ['RH', 'sp_srs', 'T_air', 'Ts']):
+            obs = ax[plot].plot(AWS_var['datetime'], AWS_var[j], color='k', linewidth=2.5, label="Cabinet Inlet AWS")
+            ax2 = ax[plot].twiny()
+            ax[plot].spines['right'].set_visible(False)
+            ax2.plot(surf_1p5['Time_srs'], surf_1p5[k], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals())
+            ax2.axis('off')
+            ax2.set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
+            ax[plot].set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
+            ax2.tick_params(axis='both', tick1On = False, tick2On = False)
+            ax2.set_ylim([0,100])
+            ax2.yaxis.set_label_coords(-0.35, 0.5)
+            ax[plot].set_ylim([0, 100])
+            ax[plot].set_ylabel('Relative \nHumidity \n(%)', rotation=0, fontsize=24, color = 'dimgrey', labelpad = 80)
+            ax[plot].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False)
+            lab = ax[plot].text(0.1, 0.85, transform = ax[plot].transAxes, s=lab_dict[plot], fontsize=32, fontweight='bold', color='dimgrey', zorder=5)
+            plot = plot + 1
+    plt.setp(ax[3].get_yticklabels()[-3], visible=False)
+    plt.setp(ax[3].get_yticklabels()[-1], visible=False)
+    plt.setp(ax[3].get_yticklabels()[-5], visible=False)
+    ax[3].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][0], surf_1p5['percentiles'][1], facecolor=col_dict[r], alpha=0.4)
+    ax[2].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][2], surf_1p5['percentiles'][3], facecolor=col_dict[r], alpha=0.4)
+    ax[0].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][4], surf_1p5['percentiles'][5], facecolor=col_dict[r], alpha=0.4)
+    ax[1].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][6], surf_1p5['percentiles'][7], facecolor=col_dict[r], alpha=0.4)
+    ax[2].yaxis.set_label_coords(-0.3, 0.5)
+    ax[2].xaxis.set_major_formatter(dayfmt)
+    ax[3].xaxis.set_major_formatter(dayfmt)
+    # Legend
+    lns = [Line2D([0],[0], color='k', linewidth = 2.5)]
+    labs = ['Observations from Cabinet Inlet']
+    for r in ['1.5 km']:
+        lns.append(Line2D([0],[0], color=col_dict[r], linewidth = 2.5))
+        labs.append(r[2]+'.'+r[4]+' km UM output for Cabinet Inlet')
+    lgd = ax[1].legend(lns, labs, bbox_to_anchor=(0.55, 1.1), loc=2, fontsize=20)
+    frame = lgd.get_frame()
+    frame.set_facecolor('white')
+    for ln in lgd.get_texts():
+        plt.setp(ln, color='dimgrey')
+    lgd.get_frame().set_linewidth(0.0)
+    plt.subplots_adjust(wspace = 0.05, hspace = 0.05, top = 0.95, right = 0.85, left = 0.16, bottom = 0.08)
+    #plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/surface_met_'+case+'_with_range.png', transparent = True)
+    #plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/surface_met_'+case+'_with_range.eps', transparent = True)
+    #plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/surface_met_'+case+'_with_range.pdf', transparent = True)
+    plt.show()
+
+surf_plot()
+
+print('\nplotting surface vars....')
+#surf_plot()
+
+print('\nplotting SEBs....')
+#SEB_plot()
+
         # Wind speed
         ax2 = ax[1].twiny()
         obs = ax[1].plot(AWS_var['datetime'], AWS_var['FF_10m'], color='k', linewidth=2.5, label="Cabinet Inlet AWS")
@@ -653,39 +690,6 @@ def surf_plot():
         ax[3].set_ylim(-30, 15)
         ax2.set_ylim(-30, 15)
         ax[3].text(x=surf_1p5['Time_srs'][15], y=10, fontweight='bold', s='d', fontsize=30, color='dimgrey', zorder=5)
-        plt.setp(ax[3].get_yticklabels()[-3], visible=False)
-        plt.setp(ax[3].get_yticklabels()[-1], visible=False)
-        plt.setp(ax[3].get_yticklabels()[-5], visible=False)
-        ax[3].fill_between(surf_1p5['Time_srs'], percentiles_surf[0], percentiles_surf[1], facecolor=col_dict[r], alpha=0.4)
-        ax[2].fill_between(surf_1p5['Time_srs'], percentiles_surf[2], percentiles_surf[3], facecolor=col_dict[r], alpha=0.4)
-        ax[0].fill_between(surf_1p5['Time_srs'], percentiles_surf[4], percentiles_surf[5], facecolor=col_dict[r], alpha=0.4)
-        ax[1].fill_between(surf_1p5['Time_srs'], percentiles_surf[6], percentiles_surf[7], facecolor=col_dict[r], alpha=0.4)
-    ax[2].yaxis.set_label_coords(-0.3, 0.5)
-    ax[2].xaxis.set_major_formatter(dayfmt)
-    ax[3].xaxis.set_major_formatter(dayfmt)
-    # Legend
-    lns = [Line2D([0],[0], color='k', linewidth = 2.5)]
-    labs = ['Observations from Cabinet Inlet']
-    for r in res_list:
-        lns.append(Line2D([0],[0], color=col_dict[r], linewidth = 2.5))
-        labs.append(r[2]+'.'+r[4]+' km UM output for Cabinet Inlet')
-    lgd = ax[1].legend(lns, labs, bbox_to_anchor=(0.55, 1.1), loc=2, fontsize=20)
-    frame = lgd.get_frame()
-    frame.set_facecolor('white')
-    for ln in lgd.get_texts():
-        plt.setp(ln, color='dimgrey')
-    lgd.get_frame().set_linewidth(0.0)
-    plt.subplots_adjust(wspace = 0.05, hspace = 0.05, top = 0.95, right = 0.85, left = 0.16, bottom = 0.08)
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/surface_met_'+case+'_with_range.png', transparent = True)
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/surface_met_'+case+'_with_range.eps', transparent = True)
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/surface_met_'+case+'_with_range.pdf', transparent = True)
-    plt.show()
-
-print('\nplotting surface vars....')
-#surf_plot()
-
-print('\nplotting SEBs....')
-#SEB_plot()
 
 def total_SEB_model():
     SH_srs, LH_srs, T_surf, Time_srs, melt, SW_n, LW_n, LW_d, SW_d = load_SEB('km1p5')
