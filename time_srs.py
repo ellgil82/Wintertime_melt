@@ -468,6 +468,12 @@ rcParams['font.sans-serif'] = ['Segoe UI', 'Helvetica', 'Liberation sans', 'Taho
 #SH_srs, LH_srs,  T_surf, Time_srs, melt, SW_n, LW_n, LW_d, SW_d, percentiles_SEB = load_SEB('km1p5')
 #sp_srs, T_surf, T_air, RH, Time_srs, percentiles_surf = load_surf('km1p5')
 
+def ceil(number, bound=1):
+    return bound * math.ceil(number / bound)
+
+def floor(number, bound = 1)
+    return bound * math.floor(number / bound)
+
 def SEB_plot():
     fig, ax = plt.subplots(2,2,sharex= True, sharey = True, figsize=(18, 12))
     ax = ax.flatten()
@@ -593,9 +599,9 @@ def surf_plot():
             ax2.set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
             ax[plot].set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
             ax2.tick_params(axis='both', tick1On = False, tick2On = False)
-            ax2.set_ylim([0,100])
+            ax2.set_ylim([floor(np.floor(np.min(surf_1p5[k])),5),ceil(np.ceil( np.max(surf_1p5[k])),5)])
             ax2.yaxis.set_label_coords(-0.35, 0.5)
-            ax[plot].set_ylim([0, 100])
+            ax[plot].set_ylim([floor(np.floor(np.min(AWS_var[j])),5),ceil(np.ceil( np.max(AWS_var[j])),5)])
             ax[plot].set_ylabel('Relative \nHumidity \n(%)', rotation=0, fontsize=24, color = 'dimgrey', labelpad = 80)
             ax[plot].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False)
             lab = ax[plot].text(0.1, 0.85, transform = ax[plot].transAxes, s=lab_dict[plot], fontsize=32, fontweight='bold', color='dimgrey', zorder=5)
@@ -636,61 +642,7 @@ print('\nplotting surface vars....')
 print('\nplotting SEBs....')
 #SEB_plot()
 
-        # Wind speed
-        ax2 = ax[1].twiny()
-        obs = ax[1].plot(AWS_var['datetime'], AWS_var['FF_10m'], color='k', linewidth=2.5, label="Cabinet Inlet AWS")
-        ax[1].spines['left'].set_visible(False)
-        ax2.plot(surf_1p5['Time_srs'], surf_1p5['sp_srs'], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals())
-        ax[1].set_ylabel('Wind Speed \n(m s$^{-1}$)',  rotation=0, fontsize = 24,  color = 'dimgrey', labelpad = 80)
-        ax[1].yaxis.set_label_coords(1.25, 0.5)
-        ax[1].yaxis.tick_right()
-        [l.set_visible(False) for (w, l) in enumerate(ax[1].yaxis.get_ticklabels()) if w % 2 != 0]
-        ax2.set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
-        ax[1].set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
-        ax[1].tick_params(axis='both', tick1On=False, tick2On=False)
-        ax[1].tick_params(axis='x', tick1On=False, tick2On=False)
-        ax2.axis('off')
-        ax2.tick_params(axis='both', tick1On=False, tick2On=False)
-        ax2.tick_params(axis='x', tick1On=False, tick2On=False)
-        ax[1].set_ylim(0, 40)
-        ax2.set_ylim(0, 40)
-        ax[1].text(x=surf_1p5['Time_srs'][15], y=35, fontweight='bold', s='b', fontsize=30, color='dimgrey', zorder=5)
-        #Temperature
-        ax2 = ax[2].twiny()
-        ax[2].spines['right'].set_visible(False)
-        obs = ax[2].plot(AWS_var['datetime'], AWS_var['Tair'], color='k', linewidth=2.5, label="Cabinet Inlet AWS")
-        ax2.plot(surf_1p5['Time_srs'], surf_1p5['T_air'],linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals())
-        ax[2].set_ylabel('Near-surface \nAir Temperature \n($^{\circ}$C)',  rotation=0, fontsize = 24,  color = 'dimgrey', labelpad = 80)
-        ax[2].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False )
-        ax2.axis('off')
-        ax[2].yaxis.set_label_coords(-0.1, 0.5)
-        ax2.set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
-        ax[2].set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
-        ax2.tick_params(axis='both', tick1On=False, tick2On=False)
-        ax[2].set_ylim(-30, 15)
-        ax2.set_ylim(-30, 15)
-        ax[2].text(x=surf_1p5['Time_srs'][15], y=10, fontweight='bold', s='c', fontsize=30, color='dimgrey', zorder=5)
-        plt.setp(ax[2].get_yticklabels()[-1], visible=False)
-        plt.setp(ax[2].get_yticklabels()[-3], visible=False)
-        #Temperature
-        ax2 = ax[3].twiny()
-        obs = ax[3].plot(AWS_var['datetime'], AWS_var['Tsurf'], color='k', linewidth=2.5, label="Cabinet Inlet AWS")
-        ax2.plot(surf_1p5['Time_srs'], surf_1p5['Ts'],linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals())
-        ax[3].set_ylabel('Surface \nTemperature\n($^{\circ}$C)',  rotation=0, fontsize = 24,  color = 'dimgrey',labelpad = 80)
-        ax[3].spines['left'].set_visible(False)
-        ax[3].yaxis.set_label_coords(1.25, 0.5)
-        ax[3].yaxis.tick_right()
-        ax[3].tick_params(axis='both', which='both', labelsize=24 )
-        ax2.axis('off')
-        ax2.set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
-        ax[3].set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
-        ax[3].tick_params(axis='both', tick1On=False, tick2On=False)
-        ax2.tick_params(axis='both', tick1On=False, tick2On=False)
-        [l.set_visible(False) for (w, l) in enumerate(ax[3].yaxis.get_ticklabels()) if w % 2 != 0]
-        ax[3].set_ylim(-30, 15)
-        ax2.set_ylim(-30, 15)
-        ax[3].text(x=surf_1p5['Time_srs'][15], y=10, fontweight='bold', s='d', fontsize=30, color='dimgrey', zorder=5)
-
+       
 def total_SEB_model():
     SH_srs, LH_srs, T_surf, Time_srs, melt, SW_n, LW_n, LW_d, SW_d = load_SEB('km1p5')
     fig, ax = plt.subplots(1,1, figsize = (18,8), frameon= False)
@@ -950,4 +902,65 @@ df['bias'] =pd.Series(bias, index=idx)
 df['rmse'] = pd.Series(rmse, index = idx)
 df['% RMSE'] = ( df['rmse']/df['obs mean'] ) * 100
 
-print df '''
+print df 
+
+
+
+ # Wind speed
+        ax2 = ax[1].twiny()
+        obs = ax[1].plot(AWS_var['datetime'], AWS_var['FF_10m'], color='k', linewidth=2.5, label="Cabinet Inlet AWS")
+        ax[1].spines['left'].set_visible(False)
+        ax2.plot(surf_1p5['Time_srs'], surf_1p5['sp_srs'], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals())
+        ax[1].set_ylabel('Wind Speed \n(m s$^{-1}$)',  rotation=0, fontsize = 24,  color = 'dimgrey', labelpad = 80)
+        ax[1].yaxis.set_label_coords(1.25, 0.5)
+        ax[1].yaxis.tick_right()
+        [l.set_visible(False) for (w, l) in enumerate(ax[1].yaxis.get_ticklabels()) if w % 2 != 0]
+        ax2.set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
+        ax[1].set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
+        ax[1].tick_params(axis='both', tick1On=False, tick2On=False)
+        ax[1].tick_params(axis='x', tick1On=False, tick2On=False)
+        ax2.axis('off')
+        ax2.tick_params(axis='both', tick1On=False, tick2On=False)
+        ax2.tick_params(axis='x', tick1On=False, tick2On=False)
+        ax[1].set_ylim(0, 40)
+        ax2.set_ylim(0, 40)
+        ax[1].text(x=surf_1p5['Time_srs'][15], y=35, fontweight='bold', s='b', fontsize=30, color='dimgrey', zorder=5)
+        #Temperature
+        ax2 = ax[2].twiny()
+        ax[2].spines['right'].set_visible(False)
+        obs = ax[2].plot(AWS_var['datetime'], AWS_var['Tair'], color='k', linewidth=2.5, label="Cabinet Inlet AWS")
+        ax2.plot(surf_1p5['Time_srs'], surf_1p5['T_air'],linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals())
+        ax[2].set_ylabel('Near-surface \nAir Temperature \n($^{\circ}$C)',  rotation=0, fontsize = 24,  color = 'dimgrey', labelpad = 80)
+        ax[2].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False )
+        ax2.axis('off')
+        ax[2].yaxis.set_label_coords(-0.1, 0.5)
+        ax2.set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
+        ax[2].set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
+        ax2.tick_params(axis='both', tick1On=False, tick2On=False)
+        ax[2].set_ylim(-30, 15)
+        ax2.set_ylim(-30, 15)
+        ax[2].text(x=surf_1p5['Time_srs'][15], y=10, fontweight='bold', s='c', fontsize=30, color='dimgrey', zorder=5)
+        plt.setp(ax[2].get_yticklabels()[-1], visible=False)
+        plt.setp(ax[2].get_yticklabels()[-3], visible=False)
+        #Temperature
+        ax2 = ax[3].twiny()
+        obs = ax[3].plot(AWS_var['datetime'], AWS_var['Tsurf'], color='k', linewidth=2.5, label="Cabinet Inlet AWS")
+        ax2.plot(surf_1p5['Time_srs'], surf_1p5['Ts'],linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals())
+        ax[3].set_ylabel('Surface \nTemperature\n($^{\circ}$C)',  rotation=0, fontsize = 24,  color = 'dimgrey',labelpad = 80)
+        ax[3].spines['left'].set_visible(False)
+        ax[3].yaxis.set_label_coords(1.25, 0.5)
+        ax[3].yaxis.tick_right()
+        ax[3].tick_params(axis='both', which='both', labelsize=24 )
+        ax2.axis('off')
+        ax2.set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
+        ax[3].set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
+        ax[3].tick_params(axis='both', tick1On=False, tick2On=False)
+        ax2.tick_params(axis='both', tick1On=False, tick2On=False)
+        [l.set_visible(False) for (w, l) in enumerate(ax[3].yaxis.get_ticklabels()) if w % 2 != 0]
+        ax[3].set_ylim(-30, 15)
+        ax2.set_ylim(-30, 15)
+        ax[3].text(x=surf_1p5['Time_srs'][15], y=10, fontweight='bold', s='d', fontsize=30, color='dimgrey', zorder=5)
+
+
+
+'''
