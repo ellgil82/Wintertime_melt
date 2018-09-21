@@ -85,6 +85,8 @@ def load_AWS():
 
 AWS_var = load_AWS()
 
+AWS_var = load_AWS()
+
 ## Function to load in SEB data from UM. Make sure the file names point to the correct file stream where your variables are stored. 
 ## This can be adapted to use other formats, e.g. NetCDF, GRIB etc. (see Iris docs for further information: https://scitools.org.uk/iris/docs/latest/#)
 
@@ -177,7 +179,10 @@ def load_SEB(res):
     # Create masked array when Ts<0
     melt_masked = np.ma.masked_where(T_surf<-0.025, E)
     melt = melt_masked.clip(min=0)
+    melt = melt.data - melt.data*(np.ma.get_mask(melt))
     melt_forced = np.ma.masked_where(AWS_var['Tsurf']<-0.025, E)
+    melt_forced = melt_forced.data - melt_forced.data * (np.ma.get_mask(melt_forced))
+    melt_forced[melt_forced<0] = 0
     var_dict = {
     'Time_srs': Time_srs, 
     'Ts': T_surf, 
@@ -276,7 +281,7 @@ def load_surf(res):
     'percentiles': percentiles}
     return var_dict 
 
-#SEB_1p5 = load_SEB('km1p5')
+SEB_1p5 = load_SEB('km1p5')
 surf_1p5 = load_surf('km1p5')
 # SEB_4p0 = load_SEB('km4p0')
 # surf_4p0 = load_surf('km4p0')
@@ -358,7 +363,7 @@ rcParams['font.sans-serif'] = ['Segoe UI', 'Helvetica', 'Liberation sans', 'Taho
                                'Verdana']
 
 def correl_plot():
-    R_net = SEB1p5['SW_n'] + SEB1p5['LW_n']
+    R_net = SEB_1p5['SW_n'] + SEB_1p5['LW_n']
     fig, ax = plt.subplots(4,2, figsize = (16,28))
     ax2 = ax[:,1]
     ax = ax.flatten()
@@ -485,23 +490,23 @@ def SEB_plot():
     for r in ['1.5 km']: # can increase the number of res
         for j, k in zip(['SWin', 'LWin', 'Hsen', 'Hlat'], ['SW_d', 'LW_d', 'SH', 'LH']):
             limits = {'SWin': (-200,400), 'LWin': (-200,400), 'Tair_2m': (-25, 15), 'Tsurf': (-25, 15)}
-            titles = {'SWin': 'Downwelling \nShortwave \nRadiation \n(W m$^{-2}$)', 'LWin': 'Downwelling \nLongwave \nRadiation \n(W m$^{-2}$)'
-                    'Hsen': 'Sensible \nheat (W m$^{-2}$)', 'Hlat': 'Latent \nheat (W m$^{-2}$)'}
+            titles = {'SWin': 'Downwelling \nShortwave \nRadiation \n(W m$^{-2}$)', 'LWin': 'Downwelling \nLongwave \nRadiation \n(W m$^{-2}$)',
+                      'Hsen': 'Sensible \nheat (W m$^{-2}$)', 'Hlat': 'Latent \nheat (W m$^{-2}$)'}
             ax2 = ax[plot].twiny()
             obs = ax[plot].plot(AWS_var['datetime'], AWS_var[j], color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder = 3)
-            ax[plot].spines['right'].set_visible(False)
             ax2.plot(SEB_1p5['Time_srs'], SEB_1p5[k], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
             ax2.axis('off')
             ax2.set_xlim(SEB_1p5['Time_srs'][1], SEB_1p5['Time_srs'][-1])
             ax2.tick_params(axis='both', tick1On = False, tick2On = False)
             ax2.set_ylim([-200,400])
+            ax[plot].set_ylabel(titles[j], rotation=0, fontsize=24, color='dimgrey', labelpad=80)
             lab = ax[plot].text(0.08, 0.85, zorder = 6, transform = ax[plot].transAxes, s=lab_dict[plot], fontsize=32, fontweight='bold', color='dimgrey')
             plot = plot + 1
     for axs in [ax[0], ax[2]]:
-        axs.yaxis.set_label_coords(-0.25, 0.5)
+        axs.yaxis.set_label_coords(-0.3, 0.5)
         axs.spines['right'].set_visible(False)
     for axs in [ax[1], ax[3]]:
-        axs.yaxis.set_label_coords(1.2, 0.5)
+        axs.yaxis.set_label_coords(1.3, 0.5)
         axs.yaxis.set_ticks_position('right')
         axs.tick_params(axis='y', tick1On = False)
         axs.spines['left'].set_visible(False)
@@ -516,18 +521,15 @@ def SEB_plot():
         axs.tick_params(axis='both', which='both', labelsize=24, tick1On=False, tick2On=False, labelcolor='dimgrey', pad=10)
         [l.set_visible(False) for (w, l) in enumerate(axs.yaxis.get_ticklabels()) if w % 2 != 0]
         [l.set_visible(False) for (w, l) in enumerate(axs.xaxis.get_ticklabels()) if w % 2 != 0]
-    ax[0].yaxis.set_label_coords(-0.4, 0.5)
     ax[0].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False)
-    ax[0].text(x=SEB_1p5['Time_srs'][25], y=330, fontweight='bold', s='a', fontsize=30, color='dimgrey', zorder=6)
-    ax[3].text(x=SEB_1p5['Time_srs'][25], y=330, fontweight='bold', s='d', fontsize=30, color='dimgrey', zorder=6)
-    ax[3].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[2], percentiles_SEB[3], facecolor=col_dict[r], alpha=0.4, zorder=2)
-    ax[2].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[0], percentiles_SEB[1], facecolor=col_dict[r], alpha=0.4, zorder=2)
-    ax[1].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[8], percentiles_SEB[9], facecolor=col_dict[r], alpha=0.4, zorder=2)
-    ax[0].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[4], percentiles_SEB[5], facecolor=col_dict[r], alpha=0.4, zorder=2)
+    ax[3].fill_between(SEB_1p5['Time_srs'], SEB_1p5['percentiles'][2], SEB_1p5['percentiles'][3], facecolor=col_dict[r], alpha=0.4, zorder=2)
+    ax[2].fill_between(SEB_1p5['Time_srs'], SEB_1p5['percentiles'][0], SEB_1p5['percentiles'][1], facecolor=col_dict[r], alpha=0.4, zorder=2)
+    ax[1].fill_between(SEB_1p5['Time_srs'], SEB_1p5['percentiles'][8], SEB_1p5['percentiles'][9], facecolor=col_dict[r], alpha=0.4, zorder=2)
+    ax[0].fill_between(SEB_1p5['Time_srs'], SEB_1p5['percentiles'][4], SEB_1p5['percentiles'][5], facecolor=col_dict[r], alpha=0.4, zorder=2)
     #Legend
     lns = [Line2D([0],[0], color='k', linewidth = 2.5)]
     labs = ['Observations from Cabinet Inlet']
-    for r in res_list:
+    for r in ['1.5 km']:
         lns.append(Line2D([0],[0], color=col_dict[r], linewidth = 2.5))
         labs.append('1.5 km UM output for Cabinet Inlet')#r[2]+'.'+r[4]+' km UM output for Cabinet Inlet')
     lgd = ax[1].legend(lns, labs, bbox_to_anchor=(0.55, 1.1), loc=2, fontsize=20)
@@ -537,10 +539,12 @@ def SEB_plot():
         plt.setp(ln, color='dimgrey')
     lgd.get_frame().set_linewidth(0.0)
     plt.subplots_adjust(wspace = 0.05, hspace = 0.05, top = 0.95, right = 0.8, left = 0.2, bottom = 0.08)
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_'+case+'_with_percentiles_km1p5.png', transparent = True)
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_'+case+'_with_percentiles.eps_km1p5', transparent = True)
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_'+case+'_with_percentiles_km1p5.pdf', transparent = True)
+    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_'+case_study+'_with_percentiles_km1p5.png', transparent = True)
+    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_'+case_study+'_with_percentiles_km1p5.eps', transparent = True)
+    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_'+case_study+'_with_percentiles_km1p5.pdf', transparent = True)
     plt.show()
+
+SEB_plot()
 
 def surf_plot():
     fig, ax = plt.subplots(2,2,sharex= True, figsize=(22, 12))
@@ -554,24 +558,28 @@ def surf_plot():
     for r in ['1.5 km']: # can increase the number of res
         for j, k in zip(['RH_2m', 'FF_10m', 'Tair_2m', 'Tsurf'], ['RH', 'sp_srs', 'T_air', 'Ts']):
             limits = {'RH_2m': (0,100), 'FF_10m': (0,30), 'Tair_2m': (-25, 15), 'Tsurf': (-25, 15)}
+            titles = {'RH_2m': 'Relative \nhumidity (%)',
+                      'FF_10m': 'Wind speed \n(m s$^{-1}$)',
+                      'Tair_2m': '2 m air \ntemperature ($^{\circ}$C)',
+                      'Tsurf': 'Surface \ntemperature ($^{\circ}$C)'}
             obs = ax[plot].plot(AWS_var['datetime'], AWS_var[j], color='k', linewidth=2.5, label="Cabinet Inlet AWS")
             ax2 = ax[plot].twiny()
-            ax2.plot(surf_1p5['Time_srs'], surf_1p5[k], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals())
+            ax2.plot(surf_1p5['Time_srs'], surf_1p5[k], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 5)
             ax2.axis('off')
             ax2.set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
             ax[plot].set_xlim(surf_1p5['Time_srs'][1], surf_1p5['Time_srs'][-1])
             ax2.tick_params(axis='both', tick1On = False, tick2On = False)
             ax2.set_ylim(limits[j])
             ax[plot].set_ylim(limits[j])#[floor(np.floor(np.min(AWS_var[j])),5),ceil(np.ceil( np.max(AWS_var[j])),5)])
-            ax[plot].set_ylabel(j, rotation=0, fontsize=24, color = 'dimgrey', labelpad = 80)
+            ax[plot].set_ylabel(titles[j], rotation=0, fontsize=24, color = 'dimgrey', labelpad = 80)
             ax[plot].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False)
-            lab = ax[plot].text(0.08, 0.85, zorder = 6, transform = ax[plot].transAxes, s=lab_dict[plot], fontsize=32, fontweight='bold', color='dimgrey')
+            lab = ax[plot].text(0.08, 0.85, zorder = 100, transform = ax[plot].transAxes, s=lab_dict[plot], fontsize=32, fontweight='bold', color='dimgrey')
             plot = plot + 1
         for axs in [ax[0], ax[2]]:
-            axs.yaxis.set_label_coords(-0.25, 0.5)
+            axs.yaxis.set_label_coords(-0.3, 0.5)
             axs.spines['right'].set_visible(False)
         for axs in [ax[1], ax[3]]:
-            axs.yaxis.set_label_coords(1.2, 0.5)
+            axs.yaxis.set_label_coords(1.27, 0.5)
             axs.yaxis.set_ticks_position('right')
             axs.tick_params(axis='y', tick1On = False)
             axs.spines['left'].set_visible(False)
@@ -620,32 +628,33 @@ print('\nplotting SEBs....')
 
        
 def total_SEB_model():
-    SH_srs, LH_srs, T_surf, Time_srs, melt, SW_n, LW_n, LW_d, SW_d = load_SEB('km1p5')
     fig, ax = plt.subplots(1,1, figsize = (18,8), frameon= False)
     days = mdates.DayLocator(interval=1)
     dayfmt = mdates.DateFormatter('%b %d')
     plt.setp(ax.spines.values(), linewidth=2, color = 'dimgrey')
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
-    ax.plot(Time_srs, SW_n, color = '#6fb0d2', lw = 2.5, label = 'Net shortwave flux')
-    ax.plot(Time_srs, LW_n, color = '#86ad63', lw = 2.5, label = 'Net longwave flux')
-    ax.plot(Time_srs, SH_srs, color = '#1f78b4', lw = 2.5, label = 'Sensible heat flux')
-    ax.plot(Time_srs, LH_srs, color = '#33a02c', lw = 2.5, label = 'Latent heat flux')
-    ax.plot(Time_srs, melt, color = '#f68080', lw = 2.5, label = 'Melt flux')
+    ax.plot(SEB_1p5['Time_srs'], SEB_1p5['SW_n'], color = '#6fb0d2', lw = 2.5, label = 'Net shortwave flux')
+    ax.plot(SEB_1p5['Time_srs'], SEB_1p5['LW_n'], color = '#86ad63', lw = 2.5, label = 'Net longwave flux')
+    ax.plot(SEB_1p5['Time_srs'], SEB_1p5['SH'], color = '#1f78b4', lw = 2.5, label = 'Sensible heat flux')
+    ax.plot(SEB_1p5['Time_srs'], SEB_1p5['LH'], color = '#33a02c', lw = 2.5, label = 'Latent heat flux')
+    ax.plot(SEB_1p5['Time_srs'], SEB_1p5['melt'], color = '#f68080', lw = 2.5, label = 'Melt flux')
     lgd = plt.legend(fontsize = 18, frameon = False)
     for ln in lgd.get_texts():
         plt.setp(ln, color = 'dimgrey')
     ax.xaxis.set_major_formatter(dayfmt)
-    ax.text(x=Time_srs[6], y=350, s='b', fontsize=32, fontweight='bold', color='dimgrey')
+    #ax.text(x=SEB_1p5['Time_srs'][6], y=350, s='b', fontsize=32, fontweight='bold', color='dimgrey')
     ax.tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On=False, labelcolor = 'dimgrey', pad = 10)
     ax.axhline(y=0, xmin = 0, xmax = 1, linestyle = '--', linewidth = 1)
     ax.set_ylabel('Energy flux \n (W m$^{-2}$)',  rotation = 0, fontsize = 28, labelpad = 70, color='dimgrey')
     plt.subplots_adjust(left = 0.2, bottom = 0.1, right = 0.95)
     [l.set_visible(False) for (w,l) in enumerate(ax.yaxis.get_ticklabels()) if w % 2 != 0]
     [l.set_visible(False) for (w,l) in enumerate(ax.xaxis.get_ticklabels()) if w % 2 != 0]
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/CS1_model_SEB_km1p5.eps', transparent=True )
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/CS1_model_SEB_km1p5.png', transparent=True )
+    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/model_SEB_'+case_study+'_km1p5.eps', transparent=True )
+    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/model_SEB_'+case_study+'_km1p5.png', transparent=True )
     plt.show()
+
+total_SEB_model()
 
 def total_SEB_obs():
     Time_list, melt_CS, SH_CS, LH_CS, LWd_CS, SWd_CS, LWn_CS, SWn_CS, Time_CS, RH_CS, Ts_CS, Tair_CS, wind_CS = load_AWS()
