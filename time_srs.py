@@ -49,7 +49,7 @@ if case_study == 'CS1':
 elif case_study == 'CS2':
     os.chdir('/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS2/')
     filepath = '/data/clivarm/wip/ellgil82/May_2016/Re-runs/CS2/'
-    case_start = '2016-05-22' # Must be in datetime format as a string, e.g. '2016-05-08'
+    case_start = '2016-05-23' # Must be in datetime format as a string, e.g. '2016-05-08'
     case_end = '2016-05-30' 
     #AWS_idx = (26124,26508)
     res_list = ['km1p5', 'km4p0'] 
@@ -475,11 +475,40 @@ def floor(number, bound = 1)
     return bound * math.floor(number / bound)
 
 def SEB_plot():
-    fig, ax = plt.subplots(2,2,sharex= True, sharey = True, figsize=(18, 12))
+    fig, ax = plt.subplots(2,2,sharex= True, sharey = True, figsize=(22, 12))
     ax = ax.flatten()
     col_dict = {'0.5 km': '#33a02c', '1.5 km': '#f68080', '4.0 km': '#1f78b4'}
+    lab_dict = {0: 'a', 1: 'b', 2: 'c', 3: 'd', 4: 'e', 5: 'f', 6: 'g', 7: 'h', 8: 'i', 9: 'j', 10: 'k', 11: 'l' }
     days = mdates.DayLocator(interval=1)
     dayfmt = mdates.DateFormatter('%d %b')
+    plot = 0
+    for r in ['1.5 km']: # can increase the number of res
+        for j, k in zip(['SWin', 'LWin', 'Hsen', 'Hlat'], ['SW_d', 'LW_d', 'SH', 'LH']):
+            limits = {'SWin': (-200,400), 'LWin': (-200,400), 'Tair_2m': (-25, 15), 'Tsurf': (-25, 15)}
+            titles = {'SWin': 'Downwelling \nShortwave \nRadiation \n(W m$^{-2}$)', 'LWin': 'Downwelling \nLongwave \nRadiation \n(W m$^{-2}$)'
+                    'Hsen': 'Sensible \nheat (W m$^{-2}$)', 'Hlat': 'Latent \nheat (W m$^{-2}$)'}
+            ax2 = ax[plot].twiny()
+            obs = ax[plot].plot(AWS_var['datetime'], AWS_var[j], color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder = 3)
+            ax[plot].spines['right'].set_visible(False)
+            ax2.plot(SEB_1p5['Time_srs'], SEB_1p5[k], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
+            ax2.axis('off')
+            ax2.set_xlim(SEB_1p5['Time_srs'][1], SEB_1p5['Time_srs'][-1])
+            ax2.tick_params(axis='both', tick1On = False, tick2On = False)
+            ax2.set_ylim([-200,400])
+            lab = ax[plot].text(0.08, 0.85, zorder = 6, transform = ax[plot].transAxes, s=lab_dict[plot], fontsize=32, fontweight='bold', color='dimgrey')
+            plot = plot + 1
+    for axs in [ax[0], ax[2]]:
+        axs.yaxis.set_label_coords(-0.25, 0.5)
+        axs.spines['right'].set_visible(False)
+    for axs in [ax[1], ax[3]]:
+        axs.yaxis.set_label_coords(1.2, 0.5)
+        axs.yaxis.set_ticks_position('right')
+        axs.tick_params(axis='y', tick1On = False)
+        axs.spines['left'].set_visible(False)
+    for axs in [ax[2], ax[3]]:
+        plt.setp(axs.get_yticklabels()[-2], visible=False)
+        axs.xaxis.set_major_formatter(dayfmt)
+        #plt.setp(axs.get_xticklabels()[])
     for axs in ax:
         axs.spines['top'].set_visible(False)
         plt.setp(axs.spines.values(), linewidth=2, color='dimgrey', )
@@ -487,80 +516,20 @@ def SEB_plot():
         axs.tick_params(axis='both', which='both', labelsize=24, tick1On=False, tick2On=False, labelcolor='dimgrey', pad=10)
         [l.set_visible(False) for (w, l) in enumerate(axs.yaxis.get_ticklabels()) if w % 2 != 0]
         [l.set_visible(False) for (w, l) in enumerate(axs.xaxis.get_ticklabels()) if w % 2 != 0]
-        # Plot just 1.5 km 
-    for r in ['1.5 km']: # 
-       # Shortwave
-        ax2 = ax[0].twiny()
-        obs = ax[0].plot(AWS_var['datetime'], AWS_var['SW_d'], color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder = 3)
-        ax[0].spines['right'].set_visible(False)
-        ax2.plot(SEB_1p5['Time_srs'], SEB_1p5['SW_d'], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
-        ax2.axis('off')
-        ax2.set_xlim(SEB_1p5['Time_srs'][1], SEB_1p5['Time_srs'][-1])
-        ax2.tick_params(axis='both', tick1On = False, tick2On = False)
-        ax2.set_ylim([-200,400])
-        ax[0].set_ylim([-200, 400])
-        ax[0].set_ylabel('Downwelling \nShortwave \nRadiation \n(W m$^{-2}$)', rotation=0, fontsize=24, color = 'dimgrey')
-        ax[0].yaxis.set_label_coords(-0.4, 0.5)
-        ax[0].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False)
-        ax[0].text(x=SEB_1p5['Time_srs'][25], y=330, fontweight='bold', s='a', fontsize=30, color='dimgrey', zorder=5)
-        # Longwave
-        ax2 = ax[1].twiny()
-        obs = ax[1].plot(AWS_var['datetime'], AWS_var['LWd'], color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder =3)
-        ax[1].spines['left'].set_visible(False)
-        ax2.plot(SEB_1p5['Time_srs'], SEB_1p5['LW_d'], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
-        ax[1].set_ylabel('Downwelling \nLongwave \nRadiation \n(W m$^{-2}$)',  rotation=0, fontsize = 24,  color = 'dimgrey')
-        ax[1].yaxis.set_label_coords(1.3, 0.5)
-        ax[1].spines['right'].set_visible(False)
-        ax2.set_xlim(SEB_1p5['Time_srs'][1], SEB_1p5['Time_srs'][-1])
-        ax[1].tick_params(axis='x', tick1On=False, tick2On=False)
-        ax2.axis('off')
-        ax2.tick_params(axis='both', tick1On=False, tick2On=False)
-        ax2.tick_params(axis='x', tick1On=False, tick2On=False)
-        ax[1].set_ylim(-200, 400)
-        ax2.set_ylim(-200, 400)
-        ax[1].text(x=SEB_1p5['Time_srs'][25], y=330, fontweight='bold', s='b', fontsize=30, color='dimgrey', zorder=5)
-        # Sensible Heat
-        ax2 = ax[2].twiny()
-        ax[2].spines['right'].set_visible(False)
-        obs = ax[2].plot(AWS_var['datetime'], AWS_var['SH'], color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder= 3)
-        ax2.plot(SEB_1p5['Time_srs'], SEB_1p5['SH'], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
-        ax[2].set_ylabel('Sensible \nHeat Flux \n(W m$^{-2}$)',  rotation=0, fontsize = 24,  color = 'dimgrey')
-        ax[2].yaxis.set_label_coords(-0.4, 0.5)
-        ax[2].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False )
-        ax2.axis('off')
-        ax2.set_xlim(SEB_1p5['Time_srs'][1], SEB_1p5['Time_srs'][-1])
-        ax2.tick_params(axis='both', tick1On=False, tick2On=False)
-        ax[2].set_ylim(-200, 400)
-        ax2.set_ylim(-200, 400)
-        ax[2].text(x=SEB_1p5['Time_srs'][25], y=330, fontweight='bold', s='c', fontsize=30, color='dimgrey', zorder=5)
-        # Latent Heat
-        ax2 = ax[3].twiny()
-        obs = ax[3].plot(AWS_var['datetime'], AWS_var['LH'], color='k', linewidth=2.5, label="Cabinet Inlet AWS", zorder = 3)
-        ax2.plot(SEB_1p5['Time_srs'], SEB_1p5['LH'], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals(), zorder = 4)
-        ax[3].set_ylabel('Latent \nHeat Flux \n(W m$^{-2}$)',  rotation=0, fontsize = 24,  color = 'dimgrey')
-        ax[3].spines['left'].set_visible(False)
-        ax[3].spines['right'].set_visible(False)
-        ax[3].yaxis.set_label_coords(1.3, 0.5)
-        ax[3].tick_params(axis='x', which='both', labelsize=24 )
-        ax2.axis('off')
-        ax2.set_xlim(SEB_1p5['Time_srs'][1],SEB_1p5['Time_srs'][-1])
-        ax[3].tick_params(axis='both', tick1On=False, tick2On=False)
-        ax2.tick_params(axis='both', tick1On=False, tick2On=False)
-        ax[3].set_ylim(-200, 400)
-        ax2.set_ylim(-200, 400)
-        ax[3].text(x=SEB_1p5['Time_srs'][25], y=330, fontweight='bold', s='d', fontsize=30, color='dimgrey', zorder=5)
-        ax[3].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[2], percentiles_SEB[3], facecolor=col_dict[r], alpha=0.4, zorder=2)
-        ax[2].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[0], percentiles_SEB[1], facecolor=col_dict[r], alpha=0.4, zorder=2)
-        ax[1].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[8], percentiles_SEB[9], facecolor=col_dict[r], alpha=0.4, zorder=2)
-        ax[0].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[4], percentiles_SEB[5], facecolor=col_dict[r], alpha=0.4, zorder=2)
-    ax[2].xaxis.set_major_formatter(dayfmt)
-    ax[3].xaxis.set_major_formatter(dayfmt)
+    ax[0].yaxis.set_label_coords(-0.4, 0.5)
+    ax[0].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False)
+    ax[0].text(x=SEB_1p5['Time_srs'][25], y=330, fontweight='bold', s='a', fontsize=30, color='dimgrey', zorder=6)
+    ax[3].text(x=SEB_1p5['Time_srs'][25], y=330, fontweight='bold', s='d', fontsize=30, color='dimgrey', zorder=6)
+    ax[3].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[2], percentiles_SEB[3], facecolor=col_dict[r], alpha=0.4, zorder=2)
+    ax[2].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[0], percentiles_SEB[1], facecolor=col_dict[r], alpha=0.4, zorder=2)
+    ax[1].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[8], percentiles_SEB[9], facecolor=col_dict[r], alpha=0.4, zorder=2)
+    ax[0].fill_between(SEB_1p5['Time_srs'], percentiles_SEB[4], percentiles_SEB[5], facecolor=col_dict[r], alpha=0.4, zorder=2)
     #Legend
     lns = [Line2D([0],[0], color='k', linewidth = 2.5)]
     labs = ['Observations from Cabinet Inlet']
     for r in res_list:
         lns.append(Line2D([0],[0], color=col_dict[r], linewidth = 2.5))
-        labs.append(r[2]+'.'+r[4]+' km UM output for Cabinet Inlet')
+        labs.append('1.5 km UM output for Cabinet Inlet')#r[2]+'.'+r[4]+' km UM output for Cabinet Inlet')
     lgd = ax[1].legend(lns, labs, bbox_to_anchor=(0.55, 1.1), loc=2, fontsize=20)
     frame = lgd.get_frame()
     frame.set_facecolor('white')
@@ -568,9 +537,9 @@ def SEB_plot():
         plt.setp(ln, color='dimgrey')
     lgd.get_frame().set_linewidth(0.0)
     plt.subplots_adjust(wspace = 0.05, hspace = 0.05, top = 0.95, right = 0.8, left = 0.2, bottom = 0.08)
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_'+case+'_with_percentiles.png', transparent = True)
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_'+case+'_with_percentiles.eps', transparent = True)
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_' + case + '_with_percentiles.pdf',transparent=True)
+    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_'+case+'_with_percentiles_km1p5.png', transparent = True)
+    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_'+case+'_with_percentiles.eps_km1p5', transparent = True)
+    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/SEB_'+case+'_with_percentiles_km1p5.pdf', transparent = True)
     plt.show()
 
 def surf_plot():
@@ -584,7 +553,7 @@ def surf_plot():
     # Plot each variable in turn for 1.5 km resolution
     for r in ['1.5 km']: # can increase the number of res
         for j, k in zip(['RH_2m', 'FF_10m', 'Tair_2m', 'Tsurf'], ['RH', 'sp_srs', 'T_air', 'Ts']):
-            limits = {'RH_2m': (0,100), 'FF_10m': (0,25), 'Tair_2m': (-25, 15), 'Tsurf': (-25, 15)}
+            limits = {'RH_2m': (0,100), 'FF_10m': (0,30), 'Tair_2m': (-25, 15), 'Tsurf': (-25, 15)}
             obs = ax[plot].plot(AWS_var['datetime'], AWS_var[j], color='k', linewidth=2.5, label="Cabinet Inlet AWS")
             ax2 = ax[plot].twiny()
             ax2.plot(surf_1p5['Time_srs'], surf_1p5[k], linewidth=2.5, color=col_dict[r], label='*%(r)s UM output for Cabinet Inlet' % locals())
@@ -596,35 +565,33 @@ def surf_plot():
             ax[plot].set_ylim(limits[j])#[floor(np.floor(np.min(AWS_var[j])),5),ceil(np.ceil( np.max(AWS_var[j])),5)])
             ax[plot].set_ylabel(j, rotation=0, fontsize=24, color = 'dimgrey', labelpad = 80)
             ax[plot].tick_params(axis='both', which='both', labelsize=24, tick1On = False, tick2On = False)
-            lab = ax[plot].text(0.08, 0.85, transform = ax[plot].transAxes, s=lab_dict[plot], fontsize=32, fontweight='bold', color='dimgrey', zorder=5)
+            lab = ax[plot].text(0.08, 0.85, zorder = 6, transform = ax[plot].transAxes, s=lab_dict[plot], fontsize=32, fontweight='bold', color='dimgrey')
             plot = plot + 1
-    for axs in [ax[0], ax[2]]:
-        axs.yaxis.set_label_coords(-0.25, 0.5)
-        axs.spines['right'].set_visible(False)
-    for axs in [ax[1], ax[3]]:
-        axs.yaxis.set_label_coords(1.2, 0.5)
-        axs.yaxis.set_ticks_position('right')
-        axs.tick_params(axis='y', tick1On = False)
-        axs.spines['left'].set_visible(False)
-    for axs in [ax[2], ax[3]]:
-        plt.setp(axs.get_yticklabels()[-2], visible=False)
-        #plt.setp(axs.get_xticklabels()[])
-    for axs in ax:
-        axs.spines['top'].set_visible(False)
-        plt.setp(axs.spines.values(), linewidth=2, color='dimgrey', )
-        axs.set_xlim(AWS_var['datetime'][1], AWS_var['datetime'][-1])
-        axs.tick_params(axis='both', which='both', labelsize=24, tick1On=False, tick2On=False, labelcolor='dimgrey', pad=10)
-        [l.set_visible(False) for (w, l) in enumerate(axs.yaxis.get_ticklabels()) if w % 2 != 0]
-        [l.set_visible(False) for (w, l) in enumerate(axs.xaxis.get_ticklabels()) if w % 2 != 0]
-    #plt.setp(ax[3].get_yticklabels()[-1], visible=False)
-    #plt.setp(ax[3].get_yticklabels()[-5], visible=False)
-    ax[3].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][0], surf_1p5['percentiles'][1], facecolor=col_dict[r], alpha=0.4)
-    ax[2].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][2], surf_1p5['percentiles'][3], facecolor=col_dict[r], alpha=0.4)
-    ax[0].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][4], surf_1p5['percentiles'][5], facecolor=col_dict[r], alpha=0.4)
-    ax[1].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][6], surf_1p5['percentiles'][7], facecolor=col_dict[r], alpha=0.4)
-    #ax[2].yaxis.set_label_coords(-0.3, 0.5)
-    ax[2].xaxis.set_major_formatter(dayfmt)
-    ax[3].xaxis.set_major_formatter(dayfmt)
+        for axs in [ax[0], ax[2]]:
+            axs.yaxis.set_label_coords(-0.25, 0.5)
+            axs.spines['right'].set_visible(False)
+        for axs in [ax[1], ax[3]]:
+            axs.yaxis.set_label_coords(1.2, 0.5)
+            axs.yaxis.set_ticks_position('right')
+            axs.tick_params(axis='y', tick1On = False)
+            axs.spines['left'].set_visible(False)
+        for axs in [ax[2], ax[3]]:
+            plt.setp(axs.get_yticklabels()[-2], visible=False)
+            axs.xaxis.set_major_formatter(dayfmt)
+            #plt.setp(axs.get_xticklabels()[])
+        for axs in ax:
+            axs.spines['top'].set_visible(False)
+            plt.setp(axs.spines.values(), linewidth=2, color='dimgrey', )
+            axs.set_xlim(AWS_var['datetime'][1], AWS_var['datetime'][-1])
+            axs.tick_params(axis='both', which='both', labelsize=24, tick1On=False, tick2On=False, labelcolor='dimgrey', pad=10)
+            [l.set_visible(False) for (w, l) in enumerate(axs.yaxis.get_ticklabels()) if w % 2 != 0]
+            [l.set_visible(False) for (w, l) in enumerate(axs.xaxis.get_ticklabels()) if w % 2 != 0]
+        #plt.setp(ax[3].get_yticklabels()[-1], visible=False)
+        #plt.setp(ax[3].get_yticklabels()[-5], visible=False)
+        ax[3].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][0], surf_1p5['percentiles'][1], facecolor=col_dict[r], alpha=0.4)
+        ax[2].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][2], surf_1p5['percentiles'][3], facecolor=col_dict[r], alpha=0.4)
+        ax[0].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][4], surf_1p5['percentiles'][5], facecolor=col_dict[r], alpha=0.4)
+        ax[1].fill_between(surf_1p5['Time_srs'], surf_1p5['percentiles'][6], surf_1p5['percentiles'][7], facecolor=col_dict[r], alpha=0.4)
     # Legend
     lns = [Line2D([0],[0], color='k', linewidth = 2.5)]
     labs = ['Observations from Cabinet Inlet']
@@ -752,8 +719,7 @@ def total_SEB():
     plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/' + case + 'total_SEB.pdf', transparent=True)
     plt.show()
 
-total_SEB()
-
+#total_SEB()
 
 def bias_colour():
     fig, ax = plt.subplots(2, 2, figsize=(14, 12))
