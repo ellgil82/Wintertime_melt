@@ -386,7 +386,7 @@ def correl_plot():
         [l.set_visible(False) for (w, l) in enumerate(axs.yaxis.get_ticklabels()) if w % 2 != 0]
         axs.yaxis.set_label_coords(1.45, 0.57)
     plot = 0
-    surf_met_mod = [surf_1p5['Ts'], surf_1p5['T_air'], surf_1p5['RH'], surf_1p5['sp_srs'], SEB_1p5['SW_d'], SEB_1p5['LW_d'], R_net, SEB_1p5['melt'] ]
+    surf_met_mod = [surf_1p5['Ts'], surf_1p5['T_air'], surf_1p5['RH'], surf_1p5['sp_srs'], SEB_1p5['SW_d'], SEB_1p5['LW_d'], R_net, SEB_1p5['melt_forced'] ]
     surf_met_obs = [AWS_var['Tsurf'], AWS_var['Tair_2m'], AWS_var['RH_2m'], AWS_var['FF_10m'], AWS_var['SWin'], AWS_var['LWin'], AWS_var['Rnet'], AWS_var['Melt']]
     titles = ['$T_S$', '$T_{air}$', '\nRelative \nHumidity', '\nWind speed', '$SW_\downarrow$',  '$LW_\downarrow$', '$R_{net}$', 'melt']
     from itertools import chain
@@ -421,9 +421,9 @@ def correl_plot():
     plt.setp(ax[6].get_yticklabels()[-2], visible=False)
     plt.setp(ax[1].get_yticklabels()[-3], visible=False)
     plt.setp(ax[2].get_yticklabels()[-3], visible=False)
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/'+ case_study + '_correlations.png', transparent=True )
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/'+ case_study + '_correlations.eps', transparent=True)
-    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/'+ case_study + '_correlations.pdf', transparent=True)
+    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/'+ case_study + '_correlations_melt_forced.png', transparent=True )
+    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/'+ case_study + '_correlations_melt_forced.eps', transparent=True)
+    plt.savefig('/users/ellgil82/figures/Wintertime melt/Re-runs/'+ case_study + '_correlations_melt_forced.pdf', transparent=True)
     plt.show()
 
 correl_plot()
