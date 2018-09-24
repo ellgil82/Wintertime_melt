@@ -280,7 +280,7 @@ def load_surf(res):
     'percentiles': percentiles}
     return var_dict
 
-#SEB_1p5 = load_SEB('km1p5')
+SEB_1p5 = load_SEB('km1p5')
 surf_1p5 = load_surf('km1p5')
 # SEB_4p0 = load_SEB('km4p0')
 # surf_4p0 = load_surf('km4p0')
@@ -393,11 +393,11 @@ def correl_plot():
     for i in range(len(surf_met_mod)):
         slope, intercept, r2, p, sterr = scipy.stats.linregress(surf_met_obs[i], surf_met_mod[i])
         if p <= 0.01:
-            ax[plot].text(0.75, 0.9, horizontalalignment='right', verticalalignment='top',
+            ax[plot].text(0.15, 0.9, horizontalalignment='right', verticalalignment='top',
                           s='r$^{2}$ = %s' % np.round(r2, decimals=2), fontweight = 'bold', transform=ax[plot].transAxes, size=24,
                           color='dimgrey')
         else:
-            ax[plot].text(0.75, 0.9, horizontalalignment='right', verticalalignment='top',
+            ax[plot].text(0.15, 0.9, horizontalalignment='right', verticalalignment='top',
                           s='r$^{2}$ = %s' % np.round(r2, decimals=2), transform=ax[plot].transAxes, size=24,
                           color='dimgrey')
         ax[plot].scatter(surf_met_obs[i], surf_met_mod[i], color = '#f68080', s = 50)
