@@ -64,6 +64,13 @@ def load_vars(file):
 rcParams['font.family'] = 'sans-serif'
 rcParams['font.sans-serif'] = ['Segoe UI', 'Helvetica', 'Liberation sans', 'Tahoma', 'DejaVu Sans','Verdana']
 
+## Caption: Near-surface (1.5 m) air temperatures and 10 m wind speeds during non-foehn (left column; panels a and c)
+## and foehn conditions (right column; panels b and d) during CS2 using the default MetUM orography and land-sea mask
+## (top row; panels a and b) and updated orography and land-sea mask (bottom row; panels c and d). Non-foehn panels show
+## hourly mean conditions for the period 22 May 23:00 until 23 May 00:00 UTC and foehn panels show hourly mean
+## conditions for the period 26 May 11:00 until 12:00 UTC. Filled contours show 1.5 m air temperatures, while vectors
+## show 10 m wind speeds. A scale vector of 10 m s$^{-1}$ is given at top centre for reference.
+
 def plot_difs():
 	''' Function to plot surface temperature and wind vectors during foehn/non-foehn conditions using both default and
 	updated ancillary files'''
@@ -191,6 +198,5 @@ def orog_dif_plot():
 	plt.savefig('/users/ellgil82/figures/new_ancils/orog_difs_km1p5.eps', transparent = True)
 	plt.savefig('/users/ellgil82/figures/new_ancils/orog_difs_km1p5.pdf', transparent=True)
 	plt.show()
-
 
 orog_dif_plot()
